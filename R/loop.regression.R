@@ -319,5 +319,8 @@ if(creatinine==FALSE && multivariate==FALSE){
   table_model_1$conf.low <- ifelse(table_model_1$type == "logistic", exp(table_model_1$conf.low), table_model_1$conf.low)
   table_model_1$conf.high <- ifelse(table_model_1$type == "logistic", exp(table_model_1$conf.high), table_model_1$conf.high)
 
+  names(table_model_1)[names(table_model_1) == "varY.j."] <- "varY"
+  names(table_model_1)[names(table_model_1) == "term"] <- "varX"
+
   return(table_model_1)
 }
