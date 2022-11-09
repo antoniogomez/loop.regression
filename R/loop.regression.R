@@ -45,9 +45,55 @@
 ## table <- loop.regression(iris, varY = "Sepal.Length", varX = c("Species","Sepal.Width"), varXadj = "Petal.Length",
 ##    varXconf = "Petal.Width", creatinine = TRUE, multivariate = TRUE)
 
-loop.regression <- function(data, varY, varX, varXadj, varXconf, creatinine=FALSE, multivariate=FALSE) {
+loop.regression <- function(data, varY, varX, varXadj, varXconf, varXint, creatinine=FALSE, multivariate=FALSE, interaction=FALSE) {
 
 require(broomExtra)
+
+if(interaction==TRUE){
+
+    #multivariate
+    for(j in 1:length(varY)){
+      for(i in 1:length(varX)){
+
+        if(is.numeric(data[varY[j]][,1])==TRUE) {
+
+          modelo <- lm(reformulate(c(paste0(varX[i],"*",varXint),varXadj,varXconf),varY[j]), data = data, na.action = na.exclude)
+          call <- deparse(formula(modelo), width.cutoff = 500L)
+          N <- nrow(modelo$model)
+          row <- if(is.numeric(data[varX[i]][,1])==TRUE | length(levels(data[varX[i]][,1]))<3) {2} else{length(levels(data[varX[i]][,1]))}
+          model <- "adjusted"
+          type <- "interaction lineal"
+
+
+          if(i == 1 && j == 1){    # En el primer modelo creamos la tabla, con la primera fila
+            table_model <- data.frame(varY[j], tidy_parameters(modelo)[nrow(tidy_parameters(modelo)),], N, call, model, type)
+          }
+          else{     # En los siguientes modelos la tabla ya existe, y solo hay que a?dirle filas por debajo
+            table_model <- rbind(table_model, data.frame(varY[j], tidy_parameters(modelo)[nrow(tidy_parameters(modelo)),], N, call, model, type))
+          }
+
+        } else{
+
+          modelo <- glm(reformulate(c(paste0(varX[i],"*",varXint),varXadj,varXconf),varY[j]), family="binomial", data = data, na.action = na.exclude)
+          call <- deparse(formula(modelo), width.cutoff = 500L)
+          N <- nrow(modelo$model)
+          row <- if(is.numeric(data[varX[i]][,1])==TRUE | length(levels(data[varX[i]][,1]))<3) {2} else{length(levels(data[varX[i]][,1]))}
+          model <- "adjusted"
+          type <- "interaction logistic"
+
+          if(i == 1 && j == 1){    # En el primer modelo creamos la tabla, con la primera fila
+            table_model <- data.frame(varY[j], tidy_parameters(modelo)[nrow(tidy_parameters(modelo)),], N, call, model, type)
+          }
+          else{     # En los siguientes modelos la tabla ya existe, y solo hay que a?dirle filas por debajo
+            table_model <- rbind(table_model, data.frame(varY[j], tidy_parameters(modelo)[nrow(tidy_parameters(modelo)),], N, call, model, type))
+          }
+        }
+      }
+    }
+
+    table_model_1 <- table_model
+
+  } else {
 
 if(creatinine==TRUE && multivariate==TRUE){
 
@@ -308,7 +354,7 @@ if(creatinine==FALSE && multivariate==FALSE){
       }
   table_model_1 <- table_model
     }
-
+      }
     }
   }
 }
